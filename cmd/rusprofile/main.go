@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"rusprofile/internal/service/parser"
+	"github.com/suzibill/rusprofile/internal/service/parser"
 )
 
 func main() {

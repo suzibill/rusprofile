@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package rusprofile;
+
+option go_package = "github.com/suzibill/rusprofile/internal/proto";
+
+message Company {
+  string inn = 1;
+  string kpp = 2;
+  string name = 3;
+  string director_name = 4;
+}
+
+service RusProfile {
+  rpc GetCompanyInfo(CompanyRequest) returns (Company) {}
+}
+
+message CompanyRequest {
+  string inn = 1;
+}
