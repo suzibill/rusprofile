@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package rusprofile;
 
-option go_package = "github.com/suzibill/rusprofile/internal/proto";
+import "google/api/annotations.proto";
+
+option go_package = "/proto";
 
 message Company {
   string inn = 1;
@@ -12,7 +14,11 @@ message Company {
 }
 
 service RusProfile {
-  rpc GetCompanyInfo(CompanyRequest) returns (Company) {}
+  rpc GetCompanyInfo (CompanyRequest) returns (Company) {
+    option (google.api.http) = {
+      get: "/v1/companies/{inn}"
+    };
+  }
 }
 
 message CompanyRequest {
