@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	port = ":50051"
+	port = ":8080"
 )
 
 type server struct {
@@ -38,6 +38,7 @@ func StartServer() {
 	s := grpc.NewServer()
 	grpcServer := &server{}
 	pb.RegisterRusProfileServer(s, grpcServer)
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -55,15 +56,20 @@ func StartServer() {
 	if err != nil {
 		log.Fatalf("failed to register gRPC server implementation: %v", err)
 	}
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	err = pb.RegisterRusProfileHandlerFromEndpoint(context.Background(), mux, lis.Addr().String(), opts)
+	if err != nil {
+		log.Fatalf("failed to register gRPC-gateway: %v", err)
+	}
 
 	// Start an HTTP server
-	httpAddr := ":8080"
 	server := &http.Server{
-		Addr:    httpAddr,
+		//Addr:    port,
 		Handler: mux,
 	}
+	log.Printf("starting server on port %s", port)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(lis); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("failed to listen and serve: %v", err)
 		}
 	}()
@@ -82,6 +88,7 @@ func StartServer() {
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("failed to gracefully shutdown server: %v", err)
 	}
+	s.GracefulStop()
 
 	log.Println("server has been stopped")
 
