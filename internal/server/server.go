@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	pb "github.com/suzibill/rusprofile/internal/proto/proto"
+	pb "github.com/suzibill/rusprofile/api/gen/proto"
 	"github.com/suzibill/rusprofile/internal/service/parser"
 	"google.golang.org/grpc"
 	"log"
@@ -49,10 +49,8 @@ func StartServer() {
 			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
-	// Create a gRPC-gateway ServeMux
 	gwmux := runtime.NewServeMux()
 
-	// Register the gRPC server implementation with the ServeMux
 	err = pb.RegisterRusProfileHandlerServer(context.Background(), gwmux, grpcServer)
 	if err != nil {
 		log.Fatalf("failed to register gRPC server implementation: %v", err)
@@ -63,33 +61,25 @@ func StartServer() {
 		log.Fatalf("failed to register gRPC-gateway: %v", err)
 	}
 
-	// Start an HTTP server
 	server := &http.Server{
 		Addr:    portHTTP,
 		Handler: gwmux,
 	}
-	//log.Printf("starting server on port %s", port)
+
 	mux := http.NewServeMux()
 	mux.Handle("/", gwmux)
-	// Обработчик Swagger UI
-	mux.Handle("/swaggerui/", http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("dist"))))
-	mux.Handle("/rusprofile.swagger.json", http.FileServer(http.Dir("gen/swaggerui")))
+
+	mux.Handle("/swaggerui/", http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("third_party/swagger-ui"))))
+	mux.Handle("/rusprofile.swagger.json", http.FileServer(http.Dir("api/gen")))
 	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-	//go func() {
-	//	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-	//		log.Fatalf("failed to listen and serve: %v", err)
-	//	}
-	//}()
 
-	// Wait for a signal to stop the server
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	// Stop the server
 	log.Println("shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
