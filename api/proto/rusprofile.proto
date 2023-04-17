@@ -14,7 +14,7 @@ message Company {
 }
 
 service RusProfile {
-  rpc GetCompanyInfo (CompanyRequest) returns (Company) {
+  rpc GetCompanyInfo(CompanyRequest) returns (Company) {
     option (google.api.http) = {
       get: "/v1/companies/{inn}"
     };
