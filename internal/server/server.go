@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	port = ":8080"
+	portHTTP = ":8080"
+	portGRPC = ":8081"
 )
 
 type server struct {
@@ -39,7 +40,7 @@ func StartServer() {
 	grpcServer := &server{}
 	pb.RegisterRusProfileServer(s, grpcServer)
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", portGRPC)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -49,30 +50,39 @@ func StartServer() {
 		}
 	}()
 	// Create a gRPC-gateway ServeMux
-	mux := runtime.NewServeMux()
+	gwmux := runtime.NewServeMux()
 
 	// Register the gRPC server implementation with the ServeMux
-	err = pb.RegisterRusProfileHandlerServer(context.Background(), mux, grpcServer)
+	err = pb.RegisterRusProfileHandlerServer(context.Background(), gwmux, grpcServer)
 	if err != nil {
 		log.Fatalf("failed to register gRPC server implementation: %v", err)
 	}
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	err = pb.RegisterRusProfileHandlerFromEndpoint(context.Background(), mux, lis.Addr().String(), opts)
+	err = pb.RegisterRusProfileHandlerFromEndpoint(context.Background(), gwmux, lis.Addr().String(), opts)
 	if err != nil {
 		log.Fatalf("failed to register gRPC-gateway: %v", err)
 	}
 
 	// Start an HTTP server
 	server := &http.Server{
-		//Addr:    port,
-		Handler: mux,
+		Addr:    portHTTP,
+		Handler: gwmux,
 	}
-	log.Printf("starting server on port %s", port)
-	go func() {
-		if err := server.Serve(lis); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("failed to listen and serve: %v", err)
-		}
-	}()
+	//log.Printf("starting server on port %s", port)
+	mux := http.NewServeMux()
+	mux.Handle("/", gwmux)
+	// Обработчик Swagger UI
+	mux.Handle("/swaggerui/", http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("dist"))))
+	mux.Handle("/rusprofile.swagger.json", http.FileServer(http.Dir("gen/swaggerui")))
+	err = http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+	//go func() {
+	//	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	//		log.Fatalf("failed to listen and serve: %v", err)
+	//	}
+	//}()
 
 	// Wait for a signal to stop the server
 	stop := make(chan os.Signal, 1)
