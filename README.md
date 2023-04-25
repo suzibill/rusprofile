@@ -34,7 +34,7 @@
    make docker-build
    ```
 5. Запустить сервис в Docker
-  ```
+   ```
    make docker-run
    ```
 6. Получить swaggerui документацию
