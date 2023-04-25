@@ -1,5 +1,6 @@
 # rusprofile
 
+**Тестовое задание от штрафов.нет**
 Необходимо сделать gRPC обёртку над сайтом https://www.rusprofile.ru/
 
 ## API
@@ -9,9 +10,38 @@
 
 ## Технологии
 
-* Сервис должен быть написан на Go с использованием Go Modules.
-* Предоставлять API через [gRPC](https://grpc.io/docs/languages/go/quickstart/).
-* Предоставлять API через HTTP с помощью [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway).
-* Предоставлять Swagger UI с документацией, сгенерированной из .proto файла с помощью protoc-gen-swagger.
-  Документация должна быть доступна по пути `/swaggerui`.
-* Быть упакован в Docker контейнер.
+* Go
+* API через [gRPC](https://grpc.io/docs/languages/go/quickstart/).
+* API через HTTP с помощью [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway).
+* Swagger UI с документацией, сгенерированной из .proto файла с помощью protoc-gen-swagger.
+  Документация доступна по пути `/swaggerui`.
+* Упакован в Docker контейнер.
+
+
+## Настройка и запуск проекта
+
+1. Склонировать репозиторий с помощью команды:
+   ```
+   git clone https://github.com/suzibill/rusprofile
+   ```
+2. Перейти в папку с проектом:
+   ```
+   cd rusprofile
+   ```
+3. Установить Docker с [официального сайта](https://www.docker.com/products/docker-desktop)
+4. Сбилдить Docker-образ :
+   ```
+   make docker-build
+   ```
+5. Запустить сервис в Docker
+  ```
+   make docker-run
+   ```
+6. Получить swaggerui документацию
+   ```
+   127.0.0.1:8080/swaggerui
+   ```
+7. Получить информацию о компании по ИНН 
+    ```
+    http://127.0.0.1:8080/v1/companies/{INN}
+    ```
